@@ -35,16 +35,23 @@ export class MidjourneyCommand {
       })
       return this.opts
         .fetch(
-          `${this.opts.apiBaseUrl}/api/v9/channels/${this.opts.channel_id}/application-commands/search?${searchParams}`,
+          `${this.opts.apiBaseUrl}/api/v9/guilds/${this.opts.guild_id}/application-command-index?${searchParams}`,
           {
             headers: { authorization: this.opts.token },
           },
         )
         .then(res => res.json())
-        .then(({ application_commands }) => {
+        .then((res) => {
+          const { application_commands } = res
           if (application_commands.length) {
-            this.commandCaches[query] = application_commands[0]
-            return this.commandCaches[query]
+            const application_commands_filter = application_commands.filter((command: ApplicationCommond) => command.name === query)
+            if (application_commands_filter.length) {
+              this.commandCaches[query] = application_commands_filter[0]
+              return this.commandCaches[query]
+            }
+            else {
+              return Promise.reject(new Error('command not found'))
+            }
           }
           else {
             return Promise.reject(new Error('command not found'))
